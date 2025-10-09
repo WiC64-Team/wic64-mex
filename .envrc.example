@@ -1,0 +1,7 @@
+layout node
+export FTP_HOST=ftp.example.com
+export FTP_USER=yourname
+export FTP_PASS=yourpath
+export FTP_PATH=/ftp/base/dir
+
+export ADMIN_PASS=EADMION_PASS_SET_AS_ENV_VAR_ON_SERVER

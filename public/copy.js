@@ -1,0 +1,11 @@
+// eslint-disable-next-line no-unused-vars
+function copy(text) {
+    navigator.clipboard.writeText(text).then(
+        function () {
+            console.log('Copying to clipboard was successful!');
+        },
+        function (err) {
+            console.error('Could not copy text: ', err);
+        }
+    );
+}

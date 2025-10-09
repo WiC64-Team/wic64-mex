@@ -1,0 +1,65 @@
+@import '/cmuserif_roman_macroman/stylesheet.css';
+@import '/cmutypewritertext_roman_macroman/stylesheet.css';
+body {
+    font-family: 'CMU Serif', 'Times New Roman', 'Serif';
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    background: #d4d4d4;
+    border-top: 1px solid gray;
+    border-bottom: 1px solid gray;
+    font-weight: normal;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+blockquote {
+    background: #e6f2e6;
+    border-left: 3px solid #408040;
+    font-style: italic;
+    padding-left: 5px;
+    margin-left: 2px;
+}
+pre {
+    background: #e0f0ff;
+    border-left: 5px solid #aaaaaa;
+    padding: 5px;
+    margin-left: 2px;
+    font-family:
+        'cmu_typewriter_textregular',
+        Courier New,
+        Monospaced;
+}
+code {
+    background: #e0f0ff;
+    font-family:
+        'cmu_typewriter_textregular',
+        Courier New,
+        Monospaced;
+    font-size: 0.9em;
+}
+table {
+    border-spacing: 0px;
+    border-right: 1px solid gray;
+    border-bottom: 1px solid gray;
+}
+th,
+td {
+    border-left: 1px solid gray;
+    border-top: 1px solid gray;
+}
+th {
+    background: #d4d4d4;
+    font-weight: 600;
+}
+ul {
+    margin-left-ltr: 20px;
+    margin-right-rtl: 20px;
+}
+ol {
+    margin-left-ltr: 25px;
+    margin-right-rtl: 25px;
+}

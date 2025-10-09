@@ -1,0 +1,144 @@
+body {
+    font-family: 'Amaranth', Sans-serif, serif;
+    color: #3f3e34;
+
+    margin: 1em;
+    font-size: 2em;
+}
+a {
+    color: #4a8eff;
+}
+#links ul {
+    padding: 0;
+}
+#links ul li {
+    list-style-type: none;
+    margin: 0.5em;
+    display: inline;
+}
+
+h2 {
+    text-shadow: 10px 10px 7px rgba(0, 0, 0, 0.3);
+}
+
+table {
+    margin: 0 auto;
+}
+
+#downloads th {
+    text-align: left;
+}
+#downloads td,
+#downloads th {
+    padding: 1em;
+}
+
+#downloads .size {
+    text-align: right;
+}
+
+/*zebra stripes for table #downloads */
+#downloads tr:nth-child(odd) {
+    background: #eee;
+}
+
+#downloads .link a {
+    background-color: #4a8eff;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5em;
+    border-radius: 0.25em;
+}
+
+.center {
+    text-align: center;
+}
+
+a:has(#chatcounter) {
+    background: none;
+    text-decoration: none;
+}
+
+#chatcounter {
+    background: #eee;
+    padding: 0.5em;
+    font-size: 0.6em;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    box-shadow: 0.5em 0.5em 0.5em rgba(0, 0, 0, 0.3);
+    border-radius: 0.5em;
+    color: #4a8eff;
+    top: 0.25em;
+    right: 0.25em;
+    position: fixed;
+    transition: 0.5s;
+    transition-timing-function: ease-in-out;
+}
+.hidden {
+    display: none;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 1em;
+}
+.header img {
+    max-width: 100%;
+    vertical-align: middle;
+}
+input {
+    font-size: 1em;
+    padding: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 0.25em;
+    box-shadow: 0.2em 0.2em 0.2em rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 1em;
+}
+
+input[type='checkbox'] {
+    width: auto;
+    box-shadow: none;
+    margin-right: 0.5em;
+    transform: scale(2);
+}
+
+input:focus {
+    outline: none;
+    border-color: #4a8eff;
+    box-shadow: 0 0 5px rgba(74, 142, 255, 0.5);
+}
+button {
+    font-size: 1em;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 0.25em;
+    background-color: #4a8eff;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0.2em 0.2em 0.2em rgba(0, 0, 0, 0.1);
+    margin-bottom: 1em;
+}
+
+#main {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+@media (max-width: 1000px) {
+    button,
+    input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+small {
+    font-size: 0.5em;
+    color: #666;
+}
+
+#log {
+    font-size: 0.5em;
+}

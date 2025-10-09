@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>WiC64meX - Connect</title>
+        <link rel="stylesheet" href="/style.css" />
+        <script defer src="/socket.io/socket.io.js"></script>
+        <script defer src="https://unpkg.com/wakelock-lazy-polyfill"></script>
+        <script defer src="/player_page.js"></script>
+    </head>
+    <body>
+        <div class="header">
+            <img src="/logo.png" alt="WiC64meX Logo" id="logo" />
+        </div>
+        <div id="main">
+            <h1>WiC64meX</h1>
+            <h2>
+                you are <span id="connected" class="hidden">connected via</span
+                ><span id="disconnected">not connected</span>
+                <span id="code"><u></u></span>
+            </h2>
+
+            <p id="explanation_min">
+                To continue please press this button.
+                <a id="explanation_link" href="#why">why?</a>
+            </p>
+            <p id="explanation_max" class="hidden">
+                Your browser doesn't allow autoplay of media with sound on any
+                website. We need to autoplay sound for the WiCmeX to work. By
+                pressing this button, the resulting Mediaplayback will be
+                allowed to play sound.
+            </p>
+
+            <button id="letsstart">Let's start!</button>
+            <br />
+            <input type="checkbox" id="nosleep" />
+            <label for="nosleep">
+                Prevent your device from falling asleep!</label
+            >
+            <br />
+            <small id="con_status"></small>
+            <small id="latency"></small>
+            <br />
+            <input type="checkbox" id="devMode" />
+            <label for="devMode">Devmode</label>
+            <div id="devContainer" class="hidden">
+                <pre id="log"></pre>
+                <label
+                    ><input type="checkbox" id="autoscroll" />auto scroll to
+                    bottom on new log</label
+                >
+            </div>
+        </div>
+    </body>
+</html>

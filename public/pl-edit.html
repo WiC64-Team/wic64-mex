@@ -1,0 +1,637 @@
+<html>
+    <head>
+        <title>WiC64-Virtual-Soundmodule - Check Your Playlist</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            table {
+                width: 100%;
+            }
+            #format {
+                width: 20em;
+            }
+            .error {
+                background-color: #ffcccc;
+            }
+        </style>
+        <link rel="stylesheet" href="/doc-style.css" />
+        <script defer src="/copy.js"></script>
+        <script defer src="/download.js"></script>
+    </head>
+    <body>
+        <h1>WiC64-Sound-Module - Check Your Playlist</h1>
+
+        <input type="url" id="pl_url" placeholder="Enter playlist URL" />
+        <button id="pl_import_button">Import Playlist</button>
+
+        <br />
+        <br />
+        <button id="pl_add_entry_button">Add Playlist Entry</button>
+        <br />
+        <br />
+        <label
+            title="Remove options from playlist if they represent the default, makes for a smaler playlist"
+            ><input type="checkbox" id="stripExplicitDefault" /> Remove default
+            values from playlist?</label
+        >
+
+        <table id="details">
+            <thead>
+                <th>index</th>
+                <th>skipTo</th>
+                <th>actual song index</th>
+                <th>Move</th>
+                <th>url</th>
+                <th>name</th>
+                <th>player</th>
+                <th>loop</th>
+                <th>preload</th>
+                <th>rewind</th>
+                <th>Volume</th>
+                <th>FadeMs</th>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <button id="rewrite_button" onclick="jsonifyPlaylist()">
+            Rewrite Playlist Code
+        </button>
+        <h2>Playlist code</h2>
+        <a
+            href="#"
+            title="Download"
+            data-downloadFrom="playlist"
+            data-downloadFilename="playlist.json"
+            >⤓</a
+        >
+        <a href="#" title="Copy to clipboard" data-copyFrom="playlist">📋</a>
+        <pre id="playlist"></pre>
+        <h2>Sound-Lookup-Table</h2>
+        <label
+            >Transform-Case:<select id="case">
+                <option>AsIs</option>
+                <option>ALL_UPPERCASE</option>
+                <option>all_lowercase</option>
+            </select></label
+        >
+        <label>prefix:<input type="text" id="prefix" /></label>
+        <label>format:<input type="text" id="format" /></label>
+        <a
+            href="#"
+            title="Download"
+            data-downloadFrom="soundLookupTable"
+            data-downloadFilename="wicmex.asm"
+            >⤓</a
+        >
+        <a href="#" title="Copy to clipboard" data-copyFrom="soundLookupTable"
+            >📋</a
+        >
+        <pre id="soundLookupTable"></pre>
+        <div>
+            format variables:
+            <ul>
+                <li><code>{prefix}</code> - the prefix as defined</li>
+                <li>
+                    <code>{name}</code> - the name of the sound (or derived from
+                    URL)
+                </li>
+                <li>
+                    <code>{value_hex}</code> - the index of the sound in
+                    hexadecimal (padded to 2 or 4 digits)
+                </li>
+                <li>
+                    <code>{value_dec}</code> - the index of the sound in decimal
+                </li>
+                <li><code>{url}</code> - the URL of the sound</li>
+                <li>
+                    <code>|||</code> if present, all lined will be aligned at
+                    this point
+                </li>
+            </ul>
+        </div>
+
+        <script defer>
+            document.querySelectorAll('[data-downloadFrom]').forEach((el) => {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    let id = el.getAttribute('data-downloadFrom');
+                    let content = document.getElementById(id).innerText;
+                    let filename = el.getAttribute('data-downloadFilename');
+                    download(filename, content);
+                });
+            });
+
+            document.querySelectorAll('[data-copyFrom]').forEach((el) => {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    let id = el.getAttribute('data-copyFrom');
+                    let content = document.getElementById(id).innerText;
+                    copy(content);
+                });
+            });
+
+            let importUrl = document.getElementById('pl_url');
+            let importButton = document.getElementById('pl_import_button');
+            let addEntryButton = document.getElementById('pl_add_entry_button');
+            let tableBody = document
+                .getElementById('details')
+                .getElementsByTagName('tbody')[0];
+            let playlistCode = document.getElementById('playlist');
+            let stripExplicitDefault = document.getElementById(
+                'stripExplicitDefault'
+            );
+            let playlistData = [];
+
+            function updateSoundLookupTable() {
+                for (let id of ['case', 'prefix', 'format']) {
+                    localStorage.setItem(
+                        'pl_slt_' + id,
+                        document.getElementById(id).value
+                    );
+                }
+
+                let text = [];
+
+                let size = 2;
+                for (let entry of playlistData) {
+                    if (entry.realIndex > 255) {
+                        size = 4;
+                        break;
+                    }
+                }
+
+                let usedNames = [];
+                for (let idx in playlistData) {
+                    let entry = playlistData[idx];
+
+                    let name = entry.name;
+                    if (!name) {
+                        name = entry.url.replace(/^.*\/(.*?)[.].*?$/, '$1');
+                        name = decodeURIComponent(name);
+                    }
+                    let origName = name;
+                    let i = 1;
+                    //while name is in usedNames, append -i
+                    while (usedNames.includes(name)) {
+                        i++;
+                        name = origName + '_' + i;
+                    }
+                    usedNames.push(name);
+
+                    let caseType = document.getElementById('case').value;
+                    if (caseType === 'ALL_UPPERCASE') {
+                        name = name.toUpperCase();
+                    } else if (caseType === 'all_lowercase') {
+                        name = name.toLowerCase();
+                    }
+
+                    let prefix = document.getElementById('prefix').value;
+                    let format = document.getElementById('format').value;
+
+                    let value_hex = (
+                        '0000' +
+                        parseInt(entry.realIndex).toString(16).toUpperCase()
+                    ).slice(-1 * size);
+
+                    name = name.replace(/[^a-zA-Z0-9_]/g, '_');
+                    name = name.replace(/__+/g, '_');
+
+                    let line = format
+                        .replace('{prefix}', prefix)
+                        .replace('{name}', name)
+                        .replace('{value_hex}', value_hex)
+                        .replace('{value_dec}', entry.realIndex)
+                        .replace('{url}', entry.url);
+                    text.push(line.split('|||'));
+                }
+
+                let firstColWidth = 0;
+
+                for (let line of text) {
+                    if (line.length > 1) {
+                        firstColWidth = Math.max(firstColWidth, line[0].length);
+                    }
+                }
+
+                for (let i = 0; i < text.length; i++) {
+                    if (text[i].length > 1) {
+                        text[i] = text[i][0].padEnd(firstColWidth) + text[i][1];
+                    } else {
+                        text[i] = text[i][0];
+                    }
+                }
+
+                document.getElementById('soundLookupTable').innerText =
+                    text.join('\n');
+            }
+
+            for (let id of ['case', 'prefix', 'format']) {
+                let defaults = {
+                    case: 'AsIs',
+                    prefix: 'mex_',
+                    format: '{prefix}{name} |||= ${value_hex}',
+                };
+                document
+                    .getElementById(id)
+                    .addEventListener('change', updateSoundLookupTable);
+                document
+                    .getElementById(id)
+                    .addEventListener('keyup', updateSoundLookupTable);
+                document.getElementById(id).value =
+                    localStorage.getItem('pl_slt_' + id) || defaults[id];
+            }
+
+            addEntryButton.addEventListener('click', function () {
+                addRow('', null, false, false, false, null, null);
+                jsonifyPlaylist();
+            });
+
+            stripExplicitDefault.addEventListener('change', function () {
+                jsonifyPlaylist();
+                localStorage.setItem('pl_stripDefault', this.checked);
+            });
+            //on page load, check if there is a value in local storage
+            window.addEventListener('load', function () {
+                const storedValue = localStorage.getItem('pl_stripDefault');
+                if (storedValue) {
+                    stripExplicitDefault.checked = storedValue === 'true';
+                }
+            });
+
+            importUrl.addEventListener('change', function (event) {
+                //store value in local storage
+                localStorage.setItem('pl_url', event.target.value);
+            });
+            //on page load, check if there is a value in local storage
+            window.addEventListener('load', function () {
+                const storedValue = localStorage.getItem('pl_url');
+                if (storedValue) {
+                    importUrl.value = storedValue;
+                }
+            });
+
+            importButton.addEventListener('click', function () {
+                let url = importUrl.value;
+                if (!url) {
+                    alert('Please enter a URL');
+                    return;
+                }
+                fetch(url, { cache: 'no-store' })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error(
+                                'Network response was not ok ' +
+                                    response.statusText
+                            );
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        if (!Array.isArray(data)) {
+                            alert('Invalid playlist format');
+                            return;
+                        }
+                        //clear table
+                        tableBody.innerHTML = '';
+                        let usedNames = [];
+
+                        data.forEach((entry, index) => {
+                            let nameDefault = entry.url.replace(
+                                /^.*\/(.*?)[.].*?$/,
+                                '$1'
+                            );
+                            let nameDefaultOrig = nameDefault;
+                            let i = 1;
+                            while (usedNames.includes(nameDefault)) {
+                                i++;
+                                nameDefault = nameDefaultOrig + '_' + i;
+                            }
+                            usedNames.push(nameDefault);
+
+                            addRow(
+                                entry.url,
+                                entry.skipTo || null,
+                                [entry.name, nameDefault],
+                                entry.loop,
+                                entry.preload,
+                                entry.rewindOnPlay,
+                                entry.volume,
+                                entry.fadeMs
+                            );
+                        });
+                    });
+            });
+
+            function jsonifyPlaylist() {
+                let playlist = [];
+                let usedNames = [];
+                for (let i = 0; i < tableBody.rows.length; i++) {
+                    let row = tableBody.rows[i];
+                    let skipToInput =
+                        row.cells[1].getElementsByTagName('input')[0];
+                    let skipTo = parseInt(skipToInput.value);
+                    if (isNaN(skipTo)) {
+                        skipTo = null;
+                    }
+                    let actualIndexCell = row.cells[2];
+                    let actualIndex = parseInt(actualIndexCell.innerText);
+
+                    let url =
+                        row.cells[4].getElementsByTagName('input')[0].value;
+                    let name =
+                        row.cells[5].getElementsByTagName('input')[0].value ||
+                        false;
+                    let loop =
+                        row.cells[7].getElementsByTagName('input')[0].checked;
+                    let preload =
+                        row.cells[8].getElementsByTagName('input')[0].checked;
+                    let rewind =
+                        row.cells[9].getElementsByTagName('input')[0].checked;
+
+                    let volume = row.cells[10]
+                        .getElementsByTagName('input')[0]
+                        .value.trim();
+                    if (volume === '') {
+                        volume = null;
+                    } else {
+                        volume = parseFloat(volume);
+                        if (isNaN(volume) || volume < 0 || volume > 1) {
+                            volume = null;
+                        }
+                    }
+                    let fadeMs = row.cells[11]
+                        .getElementsByTagName('input')[0]
+                        .value.trim();
+                    if (fadeMs === '') {
+                        fadeMs = null;
+                    } else {
+                        fadeMs = parseInt(fadeMs);
+                        if (isNaN(fadeMs) || fadeMs < 0) {
+                            fadeMs = null;
+                        }
+                    }
+
+                    let rowData = {
+                        url: url,
+                        loop: loop,
+                        preload: preload,
+                        rewindOnPlay: rewind,
+                        name: name,
+                        skipTo: skipTo,
+                        volume: volume,
+                        fadeMs: fadeMs,
+                    };
+
+                    usedNames.push(name);
+                    if (stripExplicitDefault.checked) {
+                        if (loop === false) {
+                            delete rowData.loop;
+                        }
+                        if (preload === false) {
+                            delete rowData.preload;
+                        }
+                        if (rewind === false) {
+                            delete rowData.rewindOnPlay;
+                        }
+                        if (name === false) {
+                            delete rowData.name;
+                        }
+                        if (skipTo === null) {
+                            delete rowData.skipTo;
+                        }
+                        if (volume === null || volume === 1) {
+                            delete rowData.volume;
+                        }
+                        if (fadeMs === null || fadeMs === 1000) {
+                            delete rowData.fadeMs;
+                        }
+                    }
+                    playlist.push(rowData);
+                }
+                playlistCode.innerText = JSON.stringify(playlist, null, 2);
+
+                playlistData = playlist;
+
+                for (let idx in playlistData) {
+                    playlistData[idx].realIndex = parseInt(
+                        tableBody.rows[idx].cells[2].innerText
+                    );
+                }
+
+                while (usedNames.length) {
+                    let workOne = usedNames.pop();
+                    if (!usedNames.includes(workOne)) {
+                        continue;
+                    }
+                    document
+                        .querySelectorAll('input[name="name"].error')
+                        .forEach((el) => {
+                            el.classList.remove('error');
+                        });
+                    document
+                        .querySelectorAll('input[name="name"]')
+                        .forEach((el) => {
+                            if (el.value === workOne) {
+                                el.classList.add('error');
+                            }
+                        });
+                }
+
+                updateSoundLookupTable();
+            }
+
+            function updateIndices() {
+                for (let i = 0; i < tableBody.rows.length; i++) {
+                    tableBody.rows[i].cells[0].innerText = i;
+                    let skipToInput =
+                        tableBody.rows[i].cells[1].getElementsByTagName(
+                            'input'
+                        )[0];
+                    let actualIndexCell = tableBody.rows[i].cells[2];
+                    let skipTo = parseInt(skipToInput.value);
+                    if (isNaN(skipTo)) {
+                        skipTo = null;
+                    }
+                    let lastActualIdx = -1;
+                    if (i > 0) {
+                        let prevRow = tableBody.rows[i - 1];
+                        let prevActualIdx = parseInt(
+                            prevRow.cells[2].innerText
+                        );
+                        let prevSkipToInput =
+                            prevRow.cells[1].getElementsByTagName('input')[0];
+                        let prevSkipTo = parseInt(prevSkipToInput.value);
+                        if (isNaN(prevSkipTo)) {
+                            prevSkipTo = 0;
+                        }
+                        lastActualIdx = prevActualIdx;
+                    }
+                    let realIdx = Math.max(i, skipTo, lastActualIdx + 1);
+                    actualIndexCell.innerText = realIdx;
+                    if (skipTo && skipTo !== realIdx) {
+                        skipToInput.classList.add('error');
+                    } else {
+                        skipToInput.classList.remove('error');
+                    }
+                }
+            }
+
+            function addRow(
+                url,
+                skipTo,
+                name,
+                loop,
+                preload,
+                rewind,
+                volume,
+                fadeMs
+            ) {
+                let row = tableBody.insertRow();
+                let cellIndex = row.insertCell(0);
+                let cellOffset = row.insertCell(1);
+                let cellActualIndex = row.insertCell(2);
+
+                let cellMove = row.insertCell(3);
+                let cellUrl = row.insertCell(4);
+                let cellName = row.insertCell(5);
+                let cellPlayer = row.insertCell(6);
+                let cellLoop = row.insertCell(7);
+                let cellPreload = row.insertCell(8);
+                let cellRewind = row.insertCell(9);
+                let cellVolume = row.insertCell(10);
+                let cellFadeMs = row.insertCell(11);
+
+                cellIndex.innerText = tableBody.rows.length - 1;
+
+                let lastActualIdx = -1;
+                if (tableBody.rows.length > 1) {
+                    let prevRow = tableBody.rows[tableBody.rows.length - 2];
+                    let prevActualIdx = parseInt(prevRow.cells[2].innerText);
+                    let prevOffsetInput =
+                        prevRow.cells[1].getElementsByTagName('input')[0];
+                    let prevOffset = parseInt(prevOffsetInput.value);
+                    if (isNaN(prevOffset)) {
+                        prevOffset = 0;
+                    }
+                    lastActualIdx = prevActualIdx;
+                }
+
+                let offsetInput = document.createElement('input');
+                offsetInput.type = 'number';
+                offsetInput.value = skipTo !== null ? skipTo : '';
+                offsetInput.style.width = '4em';
+                let idx_change = function () {
+                    let val = parseInt(this.value);
+                    if (isNaN(val) || val < 0) {
+                        val = '';
+                    }
+                    this.value = val;
+                    let actualIndex = cellActualIndex;
+                    if (val === '') {
+                        actualIndex.innerText = lastActualIdx + 1;
+                    } else {
+                        actualIndex.innerText = Math.max(
+                            parseInt(cellIndex.innerText),
+                            val
+                        );
+                    }
+                    updateIndices();
+                };
+                offsetInput.addEventListener('change', idx_change);
+
+                cellOffset.appendChild(offsetInput);
+                idx_change();
+
+                let upButton = document.createElement('button');
+                upButton.innerText = '↑';
+                upButton.addEventListener('click', function () {
+                    let currentIndex = row.rowIndex - 1; // Adjust for header row
+                    if (currentIndex > 0) {
+                        let aboveRow = tableBody.rows[currentIndex - 1];
+                        tableBody.insertBefore(row, aboveRow);
+                        updateIndices();
+                        jsonifyPlaylist();
+                    }
+                });
+                cellMove.appendChild(upButton);
+                let downButton = document.createElement('button');
+                downButton.innerText = '↓';
+                downButton.addEventListener('click', function () {
+                    let currentIndex = row.rowIndex - 1; // Adjust for header row
+                    if (currentIndex < tableBody.rows.length - 1) {
+                        let belowRow = tableBody.rows[currentIndex + 1];
+                        tableBody.insertBefore(belowRow, row);
+                        updateIndices();
+                        jsonifyPlaylist();
+                    }
+                });
+                cellMove.appendChild(downButton);
+
+                let audio = document.createElement('audio');
+                let urlInput = document.createElement('input');
+                urlInput.type = 'url';
+                urlInput.value = url || '';
+                urlInput.style.width = '90%';
+                urlInput.addEventListener('change', function () {
+                    audio.src = this.value;
+                });
+                cellUrl.appendChild(urlInput);
+
+                let nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.name = 'name';
+                nameInput.value = name[0] || '';
+                nameInput.placeholder = name[1] || 'Optional name';
+                nameInput.style.width = '90%';
+                cellName.appendChild(nameInput);
+
+                audio.src = url || '';
+                audio.controls = true;
+                audio.loop = loop || false;
+                audio.preload = preload ? 'auto' : 'none';
+                cellPlayer.appendChild(audio);
+
+                let loopCheckBox = document.createElement('input');
+                loopCheckBox.type = 'checkbox';
+                loopCheckBox.checked = loop || false;
+                loopCheckBox.addEventListener('change', function () {
+                    audio.loop = this.checked;
+                });
+                cellLoop.appendChild(loopCheckBox);
+                let preloadCheckBox = document.createElement('input');
+                preloadCheckBox.type = 'checkbox';
+                preloadCheckBox.checked = preload || false;
+                preloadCheckBox.addEventListener('change', function () {
+                    audio.preload = this.checked ? 'auto' : 'none';
+                });
+                cellPreload.appendChild(preloadCheckBox);
+                let rewindCheckBox = document.createElement('input');
+                rewindCheckBox.type = 'checkbox';
+                rewindCheckBox.checked = rewind || false;
+                cellRewind.appendChild(rewindCheckBox);
+
+                let volumeInput = document.createElement('input');
+                volumeInput.type = 'number';
+                volumeInput.min = 0;
+                volumeInput.max = 1;
+                volumeInput.step = 0.01;
+                volumeInput.value = volume !== null ? volume : '';
+                volumeInput.placeholder = '1.0';
+                volumeInput.style.width = '4em';
+                cellVolume.appendChild(volumeInput);
+
+                let fadeMsInput = document.createElement('input');
+                fadeMsInput.type = 'number';
+                fadeMsInput.min = 0;
+                fadeMsInput.step = 25;
+                fadeMsInput.value = fadeMs !== null ? fadeMs : '';
+                fadeMsInput.placeholder = '1000';
+                fadeMsInput.style.width = '5em';
+                cellFadeMs.appendChild(fadeMsInput);
+
+                jsonifyPlaylist();
+            }
+            jsonifyPlaylist();
+        </script>
+    </body>
+</html>

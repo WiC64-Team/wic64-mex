@@ -1,0 +1,241 @@
+<html>
+    <head>
+        <title>WiC64-Virtual-Soundmodule - Check Your Playlist</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            .hidden {
+                display: none;
+            }
+        </style>
+        <link rel="stylesheet" href="/doc-style.css" />
+    </head>
+    <body>
+        <h1>WiC64-Sound-Module - Check Your Playlist</h1>
+
+        <section id="s1">
+            <input type="url" id="pl_url" placeholder="Enter playlist URL" />
+            <button id="pl_check_button">Check Playlist</button>
+        </section>
+        <div id="errors"></div>
+
+        <div class="hidden">
+            your Playlist:
+            <pre id="playlist"></pre>
+        </div>
+
+        <table id="details" class="hidden">
+            <thead>
+                <th>index</th>
+                <th>url</th>
+                <th>player</th>
+                <th>loop</th>
+                <th>preload</th>
+                <th>rewind</th>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <script>
+            errors = [];
+            function error(msg) {
+                errors.push(msg);
+                document.getElementById('errors').innerText = errors.join('\n');
+            }
+
+            const inputField = document.getElementById('pl_url');
+            inputField.addEventListener('change', function (event) {
+                //store value in local storage
+                localStorage.setItem('pl_url', event.target.value);
+            });
+            //on page load, check if there is a value in local storage
+            window.addEventListener('load', function () {
+                const storedValue = localStorage.getItem('pl_url');
+                if (storedValue) {
+                    inputField.value = storedValue;
+                }
+            });
+
+            const plCheckButton = document.getElementById('pl_check_button');
+            plCheckButton.addEventListener('click', async () => {
+                document.getElementById('errors').innerText = '';
+                document.getElementById('playlist').innerText = '';
+                document.querySelector('p').classList.add('hidden');
+                document.getElementById('details').classList.add('hidden');
+                document.querySelector('#details tbody').innerHTML = '';
+                const plUrl = document.getElementById('pl_url').value.trim();
+                errors = [];
+                if (!plUrl) {
+                    error('Please enter a playlist URL.');
+                    return;
+                }
+
+                //check if plURL is a valid URL
+                try {
+                    new URL(plUrl);
+                } catch (e) {
+                    error('Please enter a valid URL.');
+                    return;
+                }
+                // check if it is a https url
+                if (!plUrl.startsWith('https://')) {
+                    error('Please enter a secure (https) URL.');
+                    return;
+                }
+
+                //try to fetch the URL
+                let response;
+                try {
+                    response = await fetch(plUrl, { method: 'GET' });
+                    if (!response.ok) {
+                        error(
+                            `Could not access the URL. Server responded with status ${response.status}. Maybe see the network-tab in the developer console for more information.`
+                        );
+                        return;
+                    }
+                } catch (e) {
+                    error(
+                        'Could not access the URL. Please check it and try again. Maybe see the network-tab in the developer console for more information.'
+                    );
+                    return;
+                }
+                // log the response body to console, not the whole response just the body in plain text form
+                let raw_playlist = await response.text();
+
+                document.getElementById('playlist').innerText = raw_playlist;
+                document.querySelector('p').classList.remove('hidden');
+                let playlistData;
+                try {
+                    playlistData = JSON.parse(raw_playlist);
+                } catch (e) {
+                    error('The playlist is not a valid JSON file.');
+                    return;
+                }
+                if (!Array.isArray(playlistData)) {
+                    error('The playlist JSON is not an array.');
+                    return;
+                }
+                if (playlistData.length === 0) {
+                    error('The playlist is empty.');
+                    return;
+                }
+                for (let idx = 0; idx < playlistData.length; idx++) {
+                    const item = playlistData[idx];
+                    if (typeof item !== 'object' || item === null) {
+                        error(`Item ${idx} is not a valid object.`);
+                        continue;
+                    }
+                    if (
+                        !item.url ||
+                        typeof item.url !== 'string' ||
+                        !item.url.trim()
+                    ) {
+                        error(
+                            `Item ${idx} does not have a valid url property.`
+                        );
+                        continue;
+                    }
+
+                    //check if the url is a valid URL and is https and is fetchable
+                    try {
+                        new URL(item.url);
+                    } catch (e) {
+                        error(`Item ${idx} has an invalid url property.`);
+                        continue;
+                    }
+                    if (!item.url.startsWith('https://')) {
+                        error(
+                            `Item ${idx} has a non-secure (non-https) url property.`
+                        );
+                        continue;
+                    }
+                    //try to fetch the URL with a HEAD request
+                    try {
+                        const headResponse = await fetch(item.url, {
+                            method: 'HEAD',
+                        });
+                        if (!headResponse.ok) {
+                            error(
+                                `Item ${idx} url could not be accessed. Server responded with status ${headResponse.status}.`
+                            );
+                            continue;
+                        }
+                        const contentType =
+                            headResponse.headers.get('Content-Type');
+                        if (!contentType || !contentType.startsWith('audio/')) {
+                            error(
+                                `Item ${idx} url does not point to an audio file. Content-Type is ${contentType}.`
+                            );
+                            continue;
+                        }
+                    } catch (e) {
+                        error(
+                            `Item ${idx} url could not be accessed. Please check it and try again.`
+                        );
+                        continue;
+                    }
+                }
+
+                if (errors.length === 0) {
+                    alert(
+                        'Playlist looks good!\nPleas make sure the sounds are actual playable in the players down below.'
+                    );
+                    let tbody = document.querySelector('#details tbody');
+                    for (let idx = 0; idx < playlistData.length; idx++) {
+                        const item = playlistData[idx];
+                        let row = document.createElement('tr');
+                        let cell = document.createElement('td');
+                        cell.innerText = idx;
+                        row.appendChild(cell);
+
+                        cell = document.createElement('td');
+                        let a = document.createElement('a');
+                        a.href = item.url;
+                        a.innerText = item.url;
+                        a.target = '_blank';
+                        cell.appendChild(a);
+                        row.appendChild(cell);
+
+                        cell = document.createElement('td');
+                        //create audio player element for player
+                        let audio = document.createElement('audio');
+                        audio.src = item.url;
+                        audio.controls = true;
+                        cell.appendChild(audio);
+                        row.appendChild(cell);
+
+                        cell = document.createElement('td');
+                        if ('loop' in item) {
+                            cell.innerText = JSON.stringify(!!item.loop);
+                        } else {
+                            cell.innerText = 'not set, defaulting to false';
+                        }
+                        row.appendChild(cell);
+
+                        cell = document.createElement('td');
+                        if ('preload' in item) {
+                            cell.innerText = JSON.stringify(item.preload);
+                        } else {
+                            cell.innerText = 'not set, defaulting to false';
+                        }
+                        row.appendChild(cell);
+
+                        cell = document.createElement('td');
+                        if ('rewind' in item) {
+                            cell.innerText = JSON.stringify(!!item.rewind);
+                        } else {
+                            cell.innerText = 'not set, defaulting to false';
+                        }
+                        row.appendChild(cell);
+
+                        tbody.appendChild(row);
+
+                        document
+                            .getElementById('details')
+                            .classList.remove('hidden');
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")" || exit 1
+
+make check || exit 1
+
+
+(
+
+FIND_PARAMS=(-not -path "./.*" -not -path "./node_modules*")
+
+DIRS_TO_CREATED=$(find . -type d "${FIND_PARAMS[@]}" | sort )
+FILES_TO_COPIED=$(find . -type f "${FIND_PARAMS[@]}" | sort )
+
+
+echo  "quote USER $FTP_USER"
+echo   "quote PASS $FTP_PASS"
+echo "binary"
+echo "cd $FTP_PATH"
+
+
+for dir in $DIRS_TO_CREATED; do echo "mkdir $dir"; done;
+for file in $FILES_TO_COPIED; do echo "put $file"; done;
+
+
+
+) | ftp -n "$FTP_HOST"
+
+
+curl "http://mex.wic64.net/admin/restart?pass=$ADMIN_PASS"
+
