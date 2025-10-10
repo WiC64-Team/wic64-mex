@@ -198,6 +198,8 @@ You'll get back:
 
 ### Showing the user a qr-code instead or in addition to the url
 
+#### using sprites
+
 if you like you can call `/q/<your-session-id>` to get a qrcode that you can show the user so they doesn't have to type in the join-url
 You'll get back:
 
@@ -210,3 +212,25 @@ You'll get back:
 
 The sprite is the foreground color, the background is transparent.
 this should be displayed on a dark background with a bright color, ideally a white sprite on a black background.
+
+#### using plain petscii
+
+if you like you can call `/Q/<your-session-id>` which gives you 1001 bytes, the first is:
+
+- `0x00`: OK, everything went fine or
+- `0x01`: ERROR
+
+followed by 1000 bytes, that is a 40x25 petscii representation of the qrcode.
+make that bright text on a dark background, ideally white on black.
+Also set the border color to the same as the background color.
+
+It's either just spaces and inverted spaces, if the qrcode can be 25x25 or smaller, or
+
+- spaces $20
+- left half block $61
+- lower half block $2
+- quadrant lower right $6C
+- quadrant lower left $7B
+- quadrant upper right $7C
+- quadrant upper left $7E
+- or any of the above but inverse + $80
