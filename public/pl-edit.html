@@ -76,6 +76,11 @@
         >
         <label>prefix:<input type="text" id="prefix" /></label>
         <label>format:<input type="text" id="format" /></label>
+        <label
+            ><input type="checkbox" id="commands" checked /> export function
+            lookpu</label
+        >
+        <label>function prefix:<input type="text" id="prefix_f" /></label>
         <a
             href="#"
             title="Download"
@@ -143,7 +148,7 @@
             let playlistData = [];
 
             function updateSoundLookupTable() {
-                for (let id of ['case', 'prefix', 'format']) {
+                for (let id of ['case', 'prefix', 'format', 'prefix_f']) {
                     localStorage.setItem(
                         'pl_slt_' + id,
                         document.getElementById(id).value
@@ -205,6 +210,50 @@
                     text.push(line.split('|||'));
                 }
 
+                let commands = {
+                    Register: 'r',
+                    PlaylistChange: 'P',
+                    ConnectionCheck: 'c',
+                    Play: 'p',
+                    Pause: 'h',
+                    Stop: 's',
+                    StopAll: 'a',
+                    QRCodeSprite: 'q',
+                    QRCodePRESCII: 'Q',
+                };
+
+                if (document.getElementById('commands').checked) {
+                    for (let name of Object.keys(commands)) {
+                        let value = commands[name];
+
+                        let caseType = document.getElementById('case').value;
+                        if (caseType === 'ALL_UPPERCASE') {
+                            name = name.toUpperCase();
+                        } else if (caseType === 'all_lowercase') {
+                            name = name.toLowerCase();
+                        }
+
+                        let prefix = document.getElementById('prefix_f').value;
+                        let format = document.getElementById('format').value;
+
+                        value = value.charCodeAt(0);
+
+                        let value_hex = (
+                            '0000' + parseInt(value).toString(16).toUpperCase()
+                        ).slice(-1 * 2);
+
+                        name = name.replace(/[^a-zA-Z0-9_]/g, '_');
+                        name = name.replace(/__+/g, '_');
+
+                        let line = format
+                            .replace('{prefix}', prefix)
+                            .replace('{name}', name)
+                            .replace('{value_hex}', value_hex)
+                            .replace('{value_dec}', value);
+                        text.push(line.split('|||'));
+                    }
+                }
+
                 let firstColWidth = 0;
 
                 for (let line of text) {
@@ -225,10 +274,11 @@
                     text.join('\n');
             }
 
-            for (let id of ['case', 'prefix', 'format']) {
+            for (let id of ['case', 'prefix', 'format', 'prefix_f']) {
                 let defaults = {
                     case: 'AsIs',
-                    prefix: 'mex_',
+                    prefix: 'mex_snd_',
+                    prefix_f: 'mex_cmd_',
                     format: '{prefix}{name} |||= ${value_hex}',
                 };
                 document
