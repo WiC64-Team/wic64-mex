@@ -8,6 +8,8 @@ const io = new Server(server);
 const sessions = require('./sessions.js');
 const catcher = require('./catcher.js');
 
+app.set('case sensitive routing', true);
+
 app.use(express.static('public'));
 
 sessions.load();
@@ -62,6 +64,9 @@ app.get('/v/:fullid/:songindex/:volume', catcher(require('./f_volume')));
 
 app.get('/q/:fullid', catcher(require('./f_qr2sprite')));
 app.get('/q/:fullid/*ignore', catcher(require('./f_qr2sprite')));
+
+app.get('/Q/:fullid', catcher(require('./f_qr2petscii')));
+app.get('/Q/:fullid/*ignore', catcher(require('./f_qr2petscii')));
 
 app.get('/page/:pagename', catcher(require('./page.js')));
 
