@@ -77,9 +77,7 @@ io.on('connection', (socket) => {
     let shortid;
     socket.on('join', (sid) => {
         shortid = sid;
-        if (sessions.connect(shortid, socket)) {
-            socket.emit('playlist', sessions.getPlaylistURL(shortid));
-        }
+        socket.emit('playlist', sessions.getPlaylistURL(shortid));
     });
 
     socket.on('playlistReady', () => {
@@ -87,6 +85,7 @@ io.on('connection', (socket) => {
         for (let songindex in Object.keys(volumes)) {
             socket.emit('volume', songindex, volumes[songindex], true);
         }
+        sessions.connect(shortid, socket);
     });
 
     socket.on('disconnect', () => {
