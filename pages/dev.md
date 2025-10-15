@@ -2,7 +2,7 @@
 
 ## Prerequirements
 
-You'll need a playlist and your media-files accessible on a webserver served via https(!) and with CORS header setup that a browsers serving from another domain can access the files.
+You'll need a playlist and your media-files accessible on a webserver served via https(!).
 
 These media-files can be anything [that your user's browser can handle](https://caniuse.com/?search=audio%20format).
 
