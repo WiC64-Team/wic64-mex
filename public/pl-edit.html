@@ -49,6 +49,7 @@
                 <th>rewind</th>
                 <th>Volume</th>
                 <th>FadeMs</th>
+                <th>Delete</th>
             </thead>
             <tbody></tbody>
         </table>
@@ -550,6 +551,7 @@
                 let cellRewind = row.insertCell(9);
                 let cellVolume = row.insertCell(10);
                 let cellFadeMs = row.insertCell(11);
+                let cellDelete = row.insertCell(12);
 
                 cellIndex.innerText = tableBody.rows.length - 1;
 
@@ -678,6 +680,16 @@
                 fadeMsInput.placeholder = '1000';
                 fadeMsInput.style.width = '5em';
                 cellFadeMs.appendChild(fadeMsInput);
+
+                let deleteButton = document.createElement('button');
+                deleteButton.innerText = 'Delete';
+                deleteButton.addEventListener('click', function () {
+                    if (confirm('Are you sure you want to delete this row?')) {
+                        tableBody.removeChild(row);
+                        updateIndices();
+                    }
+                });
+                cellDelete.appendChild(deleteButton);
 
                 jsonifyPlaylist();
             }
