@@ -326,7 +326,7 @@
                     alert('Please enter a URL');
                     return;
                 }
-                fetch(url, { cache: 'no-store' })
+                fetch('/pl-edit/playlist/' + url, { cache: 'no-store' })
                     .then((response) => {
                         if (!response.ok) {
                             throw new Error(

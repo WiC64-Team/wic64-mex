@@ -17,10 +17,10 @@ function devLog(msg) {
         window.scrollTo(0, document.body.scrollHeight);
     }
 }
-
+/*
 function isdev() {
     return localStorage.getItem('devMode') === '1';
-}
+}*/
 
 let latencyPool = [];
 document
@@ -68,69 +68,47 @@ function run() {
     document.getElementById('connected').classList.remove('hidden');
     let started = false;
 
-    socket.on('playlist', (playlistURL) => {
-        devLog(`Received playlist URL: ${playlistURL}`);
-        let gotFetches = false;
-        if (isdev()) {
-            window.setTimeout(() => {
-                if (!gotFetches) {
-                    devLog(
-                        "Didn't got as response from playlist fetch, please look at the network tab or browser-console to see whats happening"
-                    );
-                }
-            }, 5000);
+    socket.on('playlist', (playlist) => {
+        let data = playlist.map((item) => ({
+            url: item.url,
+            loop: !!item.loop,
+            preload: !!item.preload,
+            rewindOnPlay: !!item.rewindOnPlay,
+            skipTo: parseInt(item.skipTo) || -1,
+            volume:
+                item.volume !== undefined
+                    ? Math.min(Math.max(parseFloat(item.volume), 0), 1)
+                    : 1,
+            fadeMs:
+                item.fadeMs !== undefined
+                    ? Math.max(parseInt(item.fadeMs), 0)
+                    : 1000,
+        }));
+        players = {};
+        let lasedUsedIdx = -1;
+        for (let i = 0; i < data.length; i++) {
+            const audio = new Audio();
+            audio.src = data[i].url;
+            audio.loop = data[i].loop;
+            audio.preload = data[i].preload ? 'auto' : 'none';
+            audio.volume = data[i].volume;
+            if (data[i].preload) {
+                audio.load();
+            }
+            audio.onerror = (e) => {
+                console.error(`Error loading audio file: ${data[i].url}`, e);
+            };
+            let myIndex = Math.max(lasedUsedIdx + 1, data[i].skipTo);
+
+            lasedUsedIdx = myIndex;
+
+            data[i].audio = audio;
+
+            players[myIndex] = data[i];
+            data[i].index = myIndex;
         }
-
-        fetch(playlistURL, { cache: 'no-store' })
-            .then((response) => response.json())
-            .then((data) => {
-                data = data.map((item) => ({
-                    url: item.url,
-                    loop: !!item.loop,
-                    preload: !!item.preload,
-                    rewindOnPlay: !!item.rewindOnPlay,
-                    skipTo: parseInt(item.skipTo) || -1,
-                    volume:
-                        item.volume !== undefined
-                            ? Math.min(Math.max(parseFloat(item.volume), 0), 1)
-                            : 1,
-                    fadeMs:
-                        item.fadeMs !== undefined
-                            ? Math.max(parseInt(item.fadeMs), 0)
-                            : 1000,
-                }));
-                gotFetches = true;
-                players = {};
-                let lasedUsedIdx = -1;
-                for (let i = 0; i < data.length; i++) {
-                    const audio = new Audio();
-                    audio.src = data[i].url;
-                    audio.loop = data[i].loop;
-                    audio.preload = data[i].preload ? 'auto' : 'none';
-                    audio.volume = data[i].volume;
-                    if (data[i].preload) {
-                        audio.load();
-                    }
-                    audio.onerror = (e) => {
-                        console.error(
-                            `Error loading audio file: ${data[i].url}`,
-                            e
-                        );
-                    };
-                    let myIndex = Math.max(lasedUsedIdx + 1, data[i].skipTo);
-
-                    lasedUsedIdx = myIndex;
-
-                    data[i].audio = audio;
-
-                    players[myIndex] = data[i];
-                    data[i].index = myIndex;
-                }
-                devLog(
-                    `Fetched playlist data: ${JSON.stringify(data, null, 2)}`
-                );
-                socket.emit('playlistReady');
-            });
+        devLog(`Fetched playlist data: ${JSON.stringify(data, null, 2)}`);
+        socket.emit('playlistReady');
     });
 
     socket.on('play', (index) => {

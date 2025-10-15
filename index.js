@@ -72,14 +72,54 @@ app.get('/page/:pagename', catcher(require('./page.js')));
 
 app.get('/admin/:action', catcher(require('./admin.js')));
 
+app.get(
+    '/pl-edit/playlist/*url',
+    catcher(function (req, res) {
+        let url = req.params.url.join('/');
+        fetch(url).then((response) => {
+            if (response.status !== 200) {
+                res.status(400).send('Playlist URL not reachable');
+                return;
+            }
+            response.text().then((text) => {
+                try {
+                    let playlist = JSON.parse(text);
+                    res.json(playlist);
+                } catch (e) {
+                    res.status(400).send(
+                        'Playlist not valid JSON:' + e.toString()
+                    );
+                    console.error(e);
+                }
+            });
+        });
+    })
+);
+
 io.on('connection', (socket) => {
     console.log('a user connected');
     let shortid;
     socket.on('join', (sid) => {
         shortid = sid;
-        socket.emit('playlist', sessions.getPlaylistURL(shortid));
+        fetch(sessions.getPlaylistURL(shortid)).then((res) => {
+            if (res.status !== 200) {
+                socket.emit('playlistError', 'Playlist URL not reachable');
+                return;
+            }
+            res.text().then((text) => {
+                try {
+                    let playlist = JSON.parse(text);
+                    socket.emit('playlist', playlist);
+                } catch (e) {
+                    socket.emit(
+                        'playlistError',
+                        'Playlist not valid JSON:' + e.toString()
+                    );
+                    console.error(e);
+                }
+            });
+        });
     });
-
     socket.on('playlistReady', () => {
         let volumes = sessions.getVolumes(shortid);
         for (let songindex in Object.keys(volumes)) {
