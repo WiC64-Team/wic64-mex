@@ -123,6 +123,8 @@ io.on('connection', (socket) => {
     socket.on('playlistReady', () => {
         let volumes = sessions.getVolumes(shortid);
         for (let songindex in Object.keys(volumes)) {
+            if (isNaN(songindex)) continue;
+            if (isNaN(volumes[songindex])) continue;
             socket.emit('volume', songindex, volumes[songindex], true);
         }
         sessions.connect(shortid, socket);
