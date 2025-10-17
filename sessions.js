@@ -116,6 +116,8 @@ let sess = {
     },
     saveVolume: function (easyID, hardID, songIndex, volume) {
         if (!this.verify(easyID, hardID)) return false;
+        if (isNaN(songIndex) || songIndex < 0) return false;
+        if (isNaN(volume) || volume < 0 || volume > 1) return false;
         this.touch(easyID);
         if (!sessions[easyID].volumes) sessions[easyID].volumes = {};
         sessions[easyID].volumes[songIndex] = volume;
