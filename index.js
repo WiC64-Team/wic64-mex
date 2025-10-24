@@ -7,6 +7,7 @@ const server = createServer(app);
 const io = new Server(server);
 const sessions = require('./sessions.js');
 const catcher = require('./catcher.js');
+const memoryUsage = process.memoryUsage();
 
 app.set('case sensitive routing', true);
 
@@ -141,6 +142,17 @@ io.on('connection', (socket) => {
 });
 
 setInterval(sessions.cleanup, 15 * 60 * 1000);
+
+setInterval(
+    () => {
+        console.log({ memoryUsage });
+    },
+    5 * 60 * 1000
+);
+
+setTimeout(() => {
+    console.log({ memoryUsage });
+}, 5000);
 
 server.listen(
     3000,
