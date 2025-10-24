@@ -142,3 +142,18 @@ small {
 #log {
     font-size: 0.5em;
 }
+
+.markdown-body.user header {
+    background-image: url('/logo.png');
+    width: 768px;
+    height: 214px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    margin: 0 auto 2em auto;
+}
+
+.markdown-body.user {
+    max-width: 1024px;
+    margin: 1em auto;
+}
