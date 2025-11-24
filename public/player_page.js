@@ -89,6 +89,7 @@ function run() {
                 item.fadeMs !== undefined
                     ? Math.max(parseInt(item.fadeMs), 0)
                     : 1000,
+            fadeInterval: null,
         }));
         players = {};
         let lasedUsedIdx = -1;
@@ -190,7 +191,10 @@ function run() {
             let steps = Math.max(Math.floor(partialFadeMs / 25), 1);
             let step = (targetVolume - currentVolume) / steps;
             let currentStep = 0;
-            let interval = setInterval(() => {
+            if (players[index].interval) {
+                clearInterval(players[index].interval);
+            }
+            players[index].interval = setInterval(() => {
                 currentStep++;
                 currentVolume += step;
 
