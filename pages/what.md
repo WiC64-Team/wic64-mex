@@ -33,3 +33,5 @@ WiC64meX does not store any personal data. The only data stored temporarily are 
 WiC64meX is licensed under the [MIT License](https://opensource.org/license/mit/).
 
 Source code is available on [GitHub](https://github.com/WiC64-Team/wic64-mex).
+
+Yes that means you can self-host your own WiC64meX server if you feel like it.
