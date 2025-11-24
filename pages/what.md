@@ -23,3 +23,13 @@ There is a demo application within the WiC64 portal under XXX/YYY/ZZZ
 ## For Developers
 
 There is a detailed [dev-documentation available](/page/dev)
+
+## Privacy
+
+WiC64meX does not store any personal data. The only data stored temporarily are session-ids, playlist-urls. All data is deleted automatically after 12 hours of inactivity.
+
+## License
+
+WiC64meX is licensed under the [MIT License](https://opensource.org/license/mit/).
+
+Source code is available on [GitHub](https://github.com/WiC64-Team/wic64-mex).
