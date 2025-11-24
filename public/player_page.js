@@ -159,7 +159,7 @@ function run() {
 
     socket.on('volume', (index, targetVolume, instant) => {
         instant = !!instant;
-        let volumeAsPercent = Math.round(targetVolume * 10000) / 1000;
+        let volumeAsPercent = Math.round(targetVolume * 10000) / 100;
         let volumeAsHex = (targetVolume * 255).toString(16).padStart(2, '0');
         if (instant) {
             devLog(
