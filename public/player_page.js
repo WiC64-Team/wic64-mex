@@ -200,7 +200,7 @@ function run() {
 
                 if (currentStep >= steps) {
                     players[index].audio.volume = targetVolume;
-                    clearInterval(interval);
+                    clearInterval(players[index].interval);
                     devLog(`Volume fade completed to ${targetVolume}`);
                     return;
                 }
