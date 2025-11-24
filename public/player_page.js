@@ -6,7 +6,7 @@ function devLog(songid, msg) {
     let songidAsHex = '';
     if (songid !== null) {
         songidAsHex = songid.toString(16).padStart(4, '0');
-        songidAsHex = `<span data-sn="${songidAsHex}">[${songidAsHex}]</span> `;
+        songidAsHex = `<span data-sn="${songidAsHex}">[$${songidAsHex}]</span> `;
     }
 
     msg = String(msg).replace(/\n/g, '\n                ');
@@ -164,7 +164,7 @@ function run() {
         if (instant) {
             devLog(
                 index,
-                `Instant volume command received for index ${index} and volume ${volumeAsHex} / ${volumeAsPercent}%`
+                `Instant volume command received for index ${index} and volume $${volumeAsHex} / ${volumeAsPercent}%`
             );
             if (!players[index]) {
                 devLog(index, `No audio player for index ${index}`);
@@ -210,7 +210,7 @@ function run() {
 
             devLog(
                 index,
-                `Fading volume from ${currentVolumeAsHex} / ${currentVolumeAsPercent}% to ${targetVolumeAsHex} / ${targetVolumeAsPercent}% over ${partialFadeMsInt} ms`
+                `Fading volume from $${currentVolumeAsHex} / ${currentVolumeAsPercent}% to $${targetVolumeAsHex} / ${targetVolumeAsPercent}% over ${partialFadeMsInt} ms`
             );
             let steps = Math.max(Math.floor(partialFadeMs / 25), 1);
             let step = (targetVolume - currentVolume) / steps;
@@ -233,7 +233,7 @@ function run() {
 
                     devLog(
                         index,
-                        `Volume fade completed to ${volumeAsHex} / ${volumeAsPercent}%`
+                        `Volume fade completed to $${volumeAsHex} / ${volumeAsPercent}%`
                     );
                     return;
                 }
