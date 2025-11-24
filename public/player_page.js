@@ -225,7 +225,16 @@ function run() {
                 if (currentStep >= steps) {
                     players[index].audio.volume = targetVolume;
                     clearInterval(players[index].interval);
-                    devLog(index, `Volume fade completed to ${targetVolume}`);
+                    let volumeAsPercent =
+                        Math.round(targetVolume * 10000) / 100;
+                    let volumeAsHex = (targetVolume * 255)
+                        .toString(16)
+                        .padStart(2, '0');
+
+                    devLog(
+                        index,
+                        `Volume fade completed to ${volumeAsHex} / ${volumeAsPercent}%`
+                    );
                     return;
                 }
                 players[index].audio.volume = currentVolume;
