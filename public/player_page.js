@@ -195,9 +195,22 @@ function run() {
                 return;
             }
             let partialFadeMs = fadeMs * Math.abs(currentVolume - targetVolume);
+
+            let targetVolumeAsPercent = Math.round(targetVolume * 10000) / 100;
+            let targetVolumeAsHex = (targetVolume * 255)
+                .toString(16)
+                .padStart(2, '0');
+
+            let currentVolumeAsPercent =
+                Math.round(currentVolume * 10000) / 100;
+            let currentVolumeAsHex = (currentVolume * 255)
+                .toString(16)
+                .padStart(2, '0');
+            let partialFadeMsInt = Math.round(partialFadeMs);
+
             devLog(
                 index,
-                `Fading volume from ${currentVolume} to ${targetVolume} over ${partialFadeMs} ms`
+                `Fading volume from ${currentVolumeAsHex} / ${currentVolumeAsPercent}% to ${targetVolumeAsHex} / ${targetVolumeAsPercent}% over ${partialFadeMsInt} ms`
             );
             let steps = Math.max(Math.floor(partialFadeMs / 25), 1);
             let step = (targetVolume - currentVolume) / steps;
