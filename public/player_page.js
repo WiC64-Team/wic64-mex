@@ -157,12 +157,14 @@ function run() {
         }
     });
 
-    socket.on('volume', (index, targetVolume, instantinstant) => {
+    socket.on('volume', (index, targetVolume, instant) => {
         instant = !!instant;
+        let volumeAsPercent = Math.round(targetVolume * 10000) / 1000;
+        let volumeAsHex = (targetVolume * 255).toString(16).padStart(2, '0');
         if (instant) {
             devLog(
                 index,
-                `Instant volume command received for index ${index} and volume ${targetVolume}`
+                `Instant volume command received for index ${index} and volume ${volumeAsHex} / ${volumeAsPercent}%`
             );
             if (!players[index]) {
                 devLog(index, `No audio player for index ${index}`);
@@ -178,7 +180,7 @@ function run() {
         }
         devLog(
             index,
-            `volume command received for index ${index} and volume ${targetVolume}`
+            `volume command received for index ${index} and volume ${volumeAsHex} / ${volumeAsPercent}%`
         );
         if (players[index]) {
             let currentVolume = players[index].audio.volume;
