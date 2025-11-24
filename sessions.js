@@ -53,7 +53,7 @@ let sess = {
         let hardID = makeID(4, hardChars);
         do {
             easyID = makeID(4, easyChars);
-        } while (sessions[easyID]);
+        } while (sessions[easyID] || !easyID.match(/[0-9]/));
         sessions[easyID] = {
             hardID: hardID,
             playlistURL: playlistURL,
