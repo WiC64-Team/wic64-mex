@@ -36,6 +36,7 @@ document
 let acquiredLock;
 document.getElementById('nosleep').addEventListener('change', function () {
     if (this.checked) {
+        localStorage.setItem('nosleep', '1');
         navigator.wakeLock
             .request('screen')
             .then((lock) => {
@@ -46,6 +47,7 @@ document.getElementById('nosleep').addEventListener('change', function () {
                 console.log('lock failed!');
             });
     } else {
+        localStorage.removeItem('nosleep');
         if (acquiredLock) {
             acquiredLock.release().then(() => {
                 acquiredLock = null;
@@ -54,6 +56,10 @@ document.getElementById('nosleep').addEventListener('change', function () {
         }
     }
 });
+if (localStorage.getItem('nosleep') === '1') {
+    document.getElementById('nosleep').checked = true;
+    document.getElementById('nosleep').dispatchEvent(new Event('change'));
+}
 
 let players = {};
 function run() {
@@ -107,14 +113,15 @@ function run() {
             players[myIndex] = data[i];
             data[i].index = myIndex;
         }
-        devLog(`Fetched playlist data: ${JSON.stringify(data, null, 2)}`);
+        //TODO: make this activateable
+        //devLog(`Fetched playlist data: ${JSON.stringify(data, null, 2)}`);
         socket.emit('playlistReady');
     });
 
     socket.on('play', (index) => {
         devLog(`Play command received for index ${index}`);
         if (players[index]) {
-            if (players[index].rewindOnPlay) {
+            if (players[index].rewindOnPlay && !players[index].audio.paused) {
                 players[index].audio.currentTime = 0;
             }
             players[index].audio.play();
