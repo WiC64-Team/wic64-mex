@@ -157,3 +157,6 @@ small {
     max-width: 1024px;
     margin: 1em auto;
 }
+.highlighted {
+    background-color: #33ff99;
+}

@@ -1,8 +1,13 @@
-function devLog(msg) {
+function devLog(songid, msg) {
     if (localStorage.getItem('devMode') !== '1') {
         return;
     }
     let d = new Date();
+    let songidAsHex = '';
+    if (songid !== null) {
+        songidAsHex = songid.toString(16).padStart(4, '0');
+        songidAsHex = `<span data-sn="${songidAsHex}">[${songidAsHex}]</span> `;
+    }
 
     msg = String(msg).replace(/\n/g, '\n                ');
     let ts =
@@ -11,8 +16,9 @@ function devLog(msg) {
         `${String(d.getSeconds()).padStart(2, '0')}.` +
         `${String(d.getMilliseconds()).padStart(3, '0')}` +
         ']: ' +
+        songidAsHex +
         msg;
-    logs.innerText += ts + '\n';
+    logs.innerHTML += ts + '\n';
     if (localStorage.getItem('autoscroll') === '1') {
         window.scrollTo(0, document.body.scrollHeight);
     }
@@ -120,63 +126,65 @@ function run() {
     });
 
     socket.on('play', (index) => {
-        devLog(`Play command received for index ${index}`);
+        devLog(index, `Play command received for index ${index}`);
         if (players[index]) {
             if (players[index].rewindOnPlay && !players[index].audio.paused) {
                 players[index].audio.currentTime = 0;
             }
             players[index].audio.play();
         } else {
-            devLog(`No audio player for index ${index}`);
+            devLog(index, `No audio player for index ${index}`);
         }
     });
 
     socket.on('pause', (index) => {
-        devLog(`Pause command received for index ${index}`);
+        devLog(index, `Pause command received for index ${index}`);
         if (players[index]) {
             players[index].audio.pause();
         } else {
-            devLog(`No audio player for index ${index}`);
+            devLog(index, `No audio player for index ${index}`);
         }
     });
 
     socket.on('stop', (index) => {
-        devLog(`Stop command received for index ${index}`);
+        devLog(index, `Stop command received for index ${index}`);
         if (players[index]) {
             players[index].audio.currentTime = 0;
             players[index].audio.pause();
             players[index].audio.currentTime = 0;
         } else {
-            devLog(`No audio player for index ${index}`);
+            devLog(index, `No audio player for index ${index}`);
         }
     });
 
-    socket.on('volume', (index, targetVolume, instant) => {
+    socket.on('volume', (index, targetVolume, instantinstant) => {
         instant = !!instant;
         if (instant) {
             devLog(
+                index,
                 `Instant volume command received for index ${index} and volume ${targetVolume}`
             );
             if (!players[index]) {
-                devLog(`No audio player for index ${index}`);
+                devLog(index, `No audio player for index ${index}`);
                 return;
             }
             targetVolume = Math.min(Math.max(parseFloat(targetVolume), 0), 1);
             if (isNaN(targetVolume)) {
-                devLog(`Invalid target volume: ${targetVolume}`);
+                devLog(index, `Invalid target volume: ${targetVolume}`);
                 return;
             }
             players[index].audio.volume = targetVolume;
             return;
         }
         devLog(
+            index,
             `volume command received for index ${index} and volume ${targetVolume}`
         );
         if (players[index]) {
             let currentVolume = players[index].audio.volume;
             targetVolume = Math.min(Math.max(parseFloat(targetVolume), 0), 1);
             if (isNaN(targetVolume)) {
-                devLog(`Invalid target volume: ${targetVolume}`);
+                devLog(index, `Invalid target volume: ${targetVolume}`);
                 return;
             }
             let fadeMs = players[index].fadeMs;
@@ -186,6 +194,7 @@ function run() {
             }
             let partialFadeMs = fadeMs * Math.abs(currentVolume - targetVolume);
             devLog(
+                index,
                 `Fading volume from ${currentVolume} to ${targetVolume} over ${partialFadeMs} ms`
             );
             let steps = Math.max(Math.floor(partialFadeMs / 25), 1);
@@ -201,18 +210,18 @@ function run() {
                 if (currentStep >= steps) {
                     players[index].audio.volume = targetVolume;
                     clearInterval(players[index].interval);
-                    devLog(`Volume fade completed to ${targetVolume}`);
+                    devLog(index, `Volume fade completed to ${targetVolume}`);
                     return;
                 }
                 players[index].audio.volume = currentVolume;
             }, partialFadeMs / steps);
         } else {
-            devLog(`No audio player for index ${index}`);
+            devLog(index, `No audio player for index ${index}`);
         }
     });
 
     socket.on('stopAll', () => {
-        devLog('StopAll command received');
+        devLog(null, 'StopAll command received');
         for (let playerIdx of Object.keys(players)) {
             let player = players[playerIdx];
             player.audio.currentTime = 0;
@@ -303,3 +312,37 @@ function devMode() {
     devContainer.classList.remove('hidden');
 }
 const logs = document.getElementById('log');
+
+document.addEventListener('mouseover', function (event) {
+    //check if event target has data-sn set and reurn if not
+    let target = event.target;
+    if (!target.dataset.sn) {
+        return;
+    }
+    //remove all highlights first
+    let highlightedElements = document.querySelectorAll('.highlighted');
+    highlightedElements.forEach((el) => {
+        el.classList.remove('highlighted');
+    });
+
+    //highlight all elements with the same data-sn
+    let sn = target.dataset.sn;
+    let elements = document.querySelectorAll(`[data-sn="${sn}"]`);
+    elements.forEach((el) => {
+        el.classList.add('highlighted');
+    });
+});
+
+document.addEventListener('mouseout', function (event) {
+    //check if event target has data-sn set and reurn if not
+    let target = event.target;
+    if (!target.dataset.sn) {
+        return;
+    }
+    //remove highlight from all elements with the same data-sn
+    let sn = target.dataset.sn;
+    let elements = document.querySelectorAll(`[data-sn="${sn}"]`);
+    elements.forEach((el) => {
+        el.classList.remove('highlighted');
+    });
+});
