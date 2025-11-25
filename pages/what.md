@@ -18,7 +18,10 @@ Once you are there, and pressed the big button, your C64 and browser share a ses
 
 ## Demo
 
-There is a demo application within the WiC64 portal under XXX/YYY/ZZZ
+There are 2 demos available, both are within the WiC64-Portal:
+
+- File Area/Apps/WiC64meX Soundboard
+- File Area/Games/lsl-Demo
 
 ## For Developers
 
