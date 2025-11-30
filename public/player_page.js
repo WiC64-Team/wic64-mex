@@ -154,8 +154,13 @@ function run() {
         }
         if (
             players[index].audio.paused &&
-            players[index].audio.currentTime > 0
+            players[index].audio.currentTime > 0 &&
+            !players[index].audio.ended
         ) {
+            devLog(
+                index,
+                `Current time is ${players[index].audio.currentTime}`
+            );
             players[index].audio.play();
             devLog(index, `Audio player for index ${index} unpaused`);
         } else {
