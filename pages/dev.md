@@ -175,6 +175,16 @@ You'll get back:
 - `0x02`: WARNING: no browser connected
 - `0x03`: ERROR: songindex out of range (if you try to play a song-index that doesn't exist in your playlist)
 
+#### unpause
+
+calling `/u/<your-session-id>/<song-index>` will unpause the song at the given index in your playlist, unpause meaning: is acts like play, but only if the sound is paused, otherwise it does nothing.
+You'll get back:
+
+- `0x00`: OK, everything went fine
+- `0x01`: ERROR: unknown / invalid session
+- `0x02`: WARNING: no browser connected
+- `0x03`: ERROR: songindex out of range (if you try to play a song-index that doesn't exist in your playlist)
+
 #### stop
 
 calling `/s/<your-session-id>/<song-index>` will stop (and rewind) the song at the given index in your playlist.
