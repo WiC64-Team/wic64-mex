@@ -55,6 +55,9 @@ app.get('/p/:fullid/:songindex/*ignore', catcher(require('./f_play.js')));
 app.get('/h/:fullid/:songindex', catcher(require('./f_pause.js')));
 app.get('/h/:fullid/:songindex/*ignore', catcher(require('./f_pause.js')));
 
+app.get('/u/:fullid/:songindex', catcher(require('./f_unpause.js')));
+app.get('/u/:fullid/:songindex/*ignore', catcher(require('./f_unpause.js')));
+
 app.get('/s/:fullid/:songindex', catcher(require('./f_stop')));
 app.get('/s/:fullid/:songindex/*ignore', catcher(require('./f_stop')));
 

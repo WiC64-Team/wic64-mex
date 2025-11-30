@@ -146,6 +146,26 @@ function run() {
         }
     });
 
+    socket.on('unpause', (index) => {
+        devLog(index, `Unpause command received for index ${index}`);
+        if (!players[index]) {
+            devLog(index, `No audio player for index ${index}`);
+            return;
+        }
+        if (
+            players[index].audio.paused &&
+            players[index].audio.currentTime > 0
+        ) {
+            players[index].audio.play();
+            devLog(index, `Audio player for index ${index} unpaused`);
+        } else {
+            devLog(
+                index,
+                `Audio player for index ${index} is NOT paused, will not resume playing`
+            );
+        }
+    });
+
     socket.on('stop', (index) => {
         devLog(index, `Stop command received for index ${index}`);
         if (players[index]) {
