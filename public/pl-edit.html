@@ -13,12 +13,25 @@
             .error {
                 background-color: #ffcccc;
             }
+            .loading > * {
+                pointer-events: none;
+                opacity: 0.125;
+            }
+            .loadingIndicator {
+                display: none;
+            }
+
+            .loading .loadingIndicator {
+                display: block;
+                opacity: 1;
+            }
         </style>
         <link rel="stylesheet" href="/doc-style.css" />
         <script defer src="/copy.js"></script>
         <script defer src="/download.js"></script>
     </head>
-    <body>
+    <body id="docbody">
+        <h1 class="loadingIndicator">Please wait, Poking Data!</h1>
         <h1>WiC64-Sound-Module - Check Your Playlist</h1>
 
         <input type="url" id="pl_url" placeholder="Enter playlist URL" />
@@ -148,7 +161,17 @@
             );
             let playlistData = [];
 
+            let updateSoundLookupTableTimeout = null;
             function updateSoundLookupTable() {
+                if (updateSoundLookupTableTimeout) {
+                    clearTimeout(updateSoundLookupTableTimeout);
+                }
+                updateSoundLookupTableTimeout = setTimeout(
+                    updateSoundLookupTableReal,
+                    1000
+                );
+            }
+            function updateSoundLookupTableReal() {
                 for (let id of ['case', 'prefix', 'format', 'prefix_f']) {
                     localStorage.setItem(
                         'pl_slt_' + id,
@@ -327,6 +350,7 @@
                     alert('Please enter a URL');
                     return;
                 }
+                document.getElementById('docbody').classList.add('loading');
                 fetch('/pl-edit/playlist/' + url, { cache: 'no-store' })
                     .then((response) => {
                         if (!response.ok) {
@@ -345,6 +369,8 @@
                         //clear table
                         tableBody.innerHTML = '';
                         let usedNames = [];
+
+                        let amount = data.length;
 
                         data.forEach((entry, index) => {
                             let nameDefault = entry.url.replace(
@@ -370,10 +396,19 @@
                                 entry.fadeMs
                             );
                         });
+                        document
+                            .getElementById('docbody')
+                            .classList.remove('loading');
                     });
             });
-
+            let jsonifyPlaylistTimeout = null;
             function jsonifyPlaylist() {
+                if (jsonifyPlaylistTimeout) {
+                    clearTimeout(jsonifyPlaylistTimeout);
+                }
+                jsonifyPlaylistTimeout = setTimeout(jsonifyPlaylistReal, 1000);
+            }
+            function jsonifyPlaylistReal() {
                 let playlist = [];
                 let usedNames = [];
                 for (let i = 0; i < tableBody.rows.length; i++) {

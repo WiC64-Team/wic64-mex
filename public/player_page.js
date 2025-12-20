@@ -81,6 +81,7 @@ function run() {
     let started = false;
 
     socket.on('playlist', (playlist) => {
+        console.log('Received playlist:', playlist);
         let data = playlist.map((item) => ({
             url: item.url,
             loop: !!item.loop,
